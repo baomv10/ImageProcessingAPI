@@ -1,25 +1,25 @@
 import express from 'express';
-import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
+import { resizeImage } from '../utilities/resize-image';
 const route = express.Router();
 
-route.get('/', (req, res) => {
+route.get('/', async (req: express.Request, res: express.Response): Promise<void> => {
   const { filename, width, height } = req.query;
 
   const types = ['jpg', 'png'];
 
-  let image = '';
+  let filenameType = '';
 
   types.forEach((type) => {
     const file = path.join(__dirname, `../../src/images/${filename}.${type}`);
     if (fs.existsSync(file)) {
-      image = file;
+      filenameType = `${filename}.${type}`;
       return;
     }
   });
 
-  if (!image) {
+  if (!filenameType) {
     res.status(400).send('invalid filename');
     return;
   }
@@ -36,21 +36,9 @@ route.get('/', (req, res) => {
     }
   }
 
-  const extension = image.split('.').pop();
+  const result = await resizeImage(filenameType, Number(width), Number(height));
 
-  const thumbnail = path.join(
-    __dirname,
-    `../../src/thumbnails/${filename}_${width}x${height}.${extension}`,
-  );
+  res.sendFile(result);
 
-  if (fs.existsSync(thumbnail)) {
-    res.sendFile(thumbnail);
-  } else {
-    sharp(image)
-      .resize(Number(width), Number(height))
-      .toFile(thumbnail, () => {
-        res.sendFile(thumbnail);
-      });
-  }
 });
 export default route;
