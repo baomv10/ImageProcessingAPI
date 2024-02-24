@@ -32,7 +32,7 @@ route.get(
     }
 
     if (width && height) {
-      if (!Number.isInteger(+width) || !Number.isInteger(+height)) {
+      if (!Number.isInteger(+width) || !Number.isInteger(+height) || +width < 1 || +height < 1) {
         res.status(400).send('invalid width or height');
         return;
       }
